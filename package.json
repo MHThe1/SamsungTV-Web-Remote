@@ -1,0 +1,32 @@
+{
+  "name": "samsung-tv-web-remote",
+  "version": "1.0.0",
+  "description": "Ultra-lightweight, beautiful web remote for Samsung Smart TVs (Tizen OS) with auto-discovery, tactile haptics, and zero bloat.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "samsung-tv",
+    "remote-control",
+    "smart-tv",
+    "tizen",
+    "tizen-remote",
+    "smartthings-alternative",
+    "pwa",
+    "web-remote",
+    "home-automation",
+    "iot"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

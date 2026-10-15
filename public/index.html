@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Ultra-lightweight, high-performance web remote for Samsung Smart TVs with auto-discovery.">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="manifest" href="/manifest.json">
+  <title>Samsung Smart TV Web Remote</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- The Remote Chassis -->
+    <main class="remote-body" id="remote-chassis">
+
+      <!-- Header: TV Status & Power -->
+      <header class="remote-header">
+        <div class="device-badge" id="btn-device-modal" title="Change or Discover TVs">
+          <span class="status-dot standby" id="status-dot"></span>
+          <div class="device-details">
+            <span class="device-title" id="device-title">Connecting...</span>
+            <span class="device-subtitle" id="device-subtitle">Searching network</span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="btn-remote btn-icon-only btn-power" id="btn-power" title="Power TV On / Off" aria-label="Power">
+            <svg viewBox="0 0 24 24"><path d="M16.56 5.44l-1.45 1.45A5.969 5.969 0 0 1 18 11.5c0 3.31-2.69 6-6 6s-6-2.69-6-6c0-1.77.77-3.37 2-4.46L6.55 5.59A7.95 7.95 0 0 0 4 11.5c0 4.42 3.58 8 8 8s8-3.58 8-8c0-2.34-.99-4.45-2.44-6.06zM13 2h-2v10h2V2z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- TV Pairing Guidance Banner (shown when TV screen prompt is active) -->
+      <section class="pairing-banner hidden" id="pairing-banner">
+        <strong>
+          <svg style="width:16px;height:16px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          TV Permission Prompt
+        </strong>
+        <p id="pairing-banner-text">Please ensure TV screen is ON. A popup asking <em>"Allow WebRemote to connect?"</em> will appear on your TV. Click <strong>Allow</strong> with your TV remote.</p>
+      </section>
+
+      <!-- Utility Row: Source, Info, Menu, Settings -->
+      <section class="utility-row" aria-label="Utility Controls">
+        <button class="btn-remote btn-utility" id="btn-source" data-key="KEY_SOURCE">Source</button>
+        <button class="btn-remote btn-utility" id="btn-info" data-key="KEY_INFO">Info</button>
+        <button class="btn-remote btn-utility" id="btn-menu" data-key="KEY_MENU">Menu</button>
+        <button class="btn-remote btn-utility" id="btn-tools" data-key="KEY_TOOLS">Tools</button>
+      </section>
+
+      <!-- Navigation Mode Selector: D-Pad vs Touchpad -->
+      <section class="nav-section">
+        <div class="nav-toggle-row">
+          <button class="nav-toggle-btn active" id="toggle-dpad-mode">D-Pad</button>
+          <button class="nav-toggle-btn" id="toggle-touchpad-mode">Touchpad</button>
+        </div>
+
+        <!-- Classic Circular D-PAD -->
+        <div class="dpad-container" id="dpad-wrapper">
+          <div class="dpad-ring">
+            <button class="dpad-btn dpad-up" id="btn-nav-up" data-key="KEY_UP" aria-label="Up">
+              <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+            </button>
+            <button class="dpad-btn dpad-down" id="btn-nav-down" data-key="KEY_DOWN" aria-label="Down">
+              <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+            <button class="dpad-btn dpad-left" id="btn-nav-left" data-key="KEY_LEFT" aria-label="Left">
+              <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <button class="dpad-btn dpad-right" id="btn-nav-right" data-key="KEY_RIGHT" aria-label="Right">
+              <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+          </div>
+          <!-- Center OK/Enter Button -->
+          <button class="dpad-center" id="btn-nav-enter" data-key="KEY_ENTER" aria-label="Select">
+            OK
+          </button>
+        </div>
+
+        <!-- Touchpad Surface (Gesture Mode) -->
+        <div class="touchpad-surface" id="touchpad-surface">
+          <svg style="width:32px;height:32px;fill:currentColor;opacity:0.4" viewBox="0 0 24 24"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.95-1.39z"/></svg>
+          <span style="font-size:12px;opacity:0.6">Swipe to navigate • Tap to select</span>
+        </div>
+
+        <!-- Navigation Action Row: Back, Home, Exit -->
+        <div class="nav-actions-row">
+          <button class="btn-remote btn-nav-action" id="btn-back" data-key="KEY_RETURN" aria-label="Back">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>Back</span>
+          </button>
+          <button class="btn-remote btn-nav-action home-btn" id="btn-home" data-key="KEY_HOME" aria-label="Home">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Home</span>
+          </button>
+          <button class="btn-remote btn-nav-action" id="btn-exit" data-key="KEY_EXIT" aria-label="Exit">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            <span>Exit</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Volume, Mute, Channel Rocker Controls -->
+      <section class="controls-strip" aria-label="Volume and Channel Controls">
+        <!-- Volume Rocker -->
+        <div class="rocker-capsule">
+          <button class="rocker-btn" id="btn-vol-up" data-key="KEY_VOLUP" aria-label="Volume Up">+</button>
+          <span class="rocker-label">VOL</span>
+          <button class="rocker-btn" id="btn-vol-down" data-key="KEY_VOLDOWN" aria-label="Volume Down">−</button>
+        </div>
+
+        <!-- Center Controls: Mute & Guide -->
+        <div class="center-stack">
+          <button class="btn-remote btn-center-action mute-btn" id="btn-mute" data-key="KEY_MUTE" aria-label="Mute">
+            <svg style="width:20px;height:20px;" viewBox="0 0 24 24"><path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+            <span>Mute</span>
+          </button>
+          <button class="btn-remote btn-center-action" id="btn-guide" data-key="KEY_GUIDE" aria-label="Guide">
+            <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="currentColor" d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>
+            <span>Guide</span>
+          </button>
+        </div>
+
+        <!-- Channel Rocker -->
+        <div class="rocker-capsule">
+          <button class="rocker-btn" id="btn-ch-up" data-key="KEY_CHUP" aria-label="Channel Up">
+            <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+          </button>
+          <span class="rocker-label">CH</span>
+          <button class="rocker-btn" id="btn-ch-down" data-key="KEY_CHDOWN" aria-label="Channel Down">
+            <svg style="width:18px;height:18px;" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Media Playback Row -->
+      <section class="media-strip" aria-label="Playback Controls">
+        <button class="btn-remote btn-media" id="btn-rewind" data-key="KEY_REWIND" aria-label="Rewind">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg>
+        </button>
+        <button class="btn-remote btn-media" id="btn-play-pause" data-key="KEY_PLAY" aria-label="Play/Pause">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="btn-remote btn-media" id="btn-fast-forward" data-key="KEY_FF" aria-label="Fast Forward">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+        </button>
+      </section>
+
+      <!-- Quick App Launchers Dock -->
+      <section class="apps-dock" aria-label="Streaming Apps">
+        <div class="apps-header">
+          <span>Quick Launch</span>
+          <span style="font-size:10px;text-transform:none;opacity:0.6">1-Tap Start</span>
+        </div>
+        <div class="apps-grid">
+          <!-- YouTube -->
+          <button class="btn-app youtube" id="app-youtube" data-app="youtube">
+            <svg viewBox="0 0 24 24"><path fill="#ff0000" d="M21.58 7.19a2.506 2.506 0 0 0-1.76-1.77C18.26 5 12 5 12 5s-6.26 0-7.82.42A2.506 2.506 0 0 0 2.42 7.19C2 8.76 2 12 2 12s0 3.24.42 4.81c.24.9.95 1.6 1.76 1.76 1.56.43 7.82.43 7.82.43s6.26 0 7.82-.43a2.506 2.506 0 0 0 1.76-1.76c.42-1.57.42-4.81.42-4.81s0-3.24-.42-4.81zM10 15V9l5.2 3-5.2 3z"/></svg>
+            <span>YouTube</span>
+          </button>
+          <!-- Netflix -->
+          <button class="btn-app netflix" id="app-netflix" data-app="netflix">
+            <svg viewBox="0 0 24 24"><path fill="#E50914" d="M5.398 0v.006c3.028 8.556 5.37 15.175 8.348 23.596 2.344.058 4.85.398 4.85.398-3.14-8.85-5.367-15.148-8.35-23.596H5.398zm13.204 0v23.994h-4.496V0h4.496zM5.398 0h4.496v23.994H5.398V0z"/></svg>
+            <span>Netflix</span>
+          </button>
+          <!-- Prime Video -->
+          <button class="btn-app prime" id="app-prime" data-app="prime">
+            <svg viewBox="0 0 24 24"><path fill="#00A8E1" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.8 14.5c-2.48 0-4.5-1.5-4.5-3.34 0-.96.56-1.83 1.5-2.41l.73.96c-.61.38-.97.91-.97 1.45 0 1.13 1.45 2.05 3.24 2.05s3.24-.92 3.24-2.05c0-.49-.31-.96-.86-1.34l.74-.96c.83.56 1.38 1.34 1.38 2.3 0 1.84-2.02 3.34-4.5 3.34zm6.05-3.5c-.24.58-.72 1.05-1.35 1.32l-.6-1.04c.38-.17.67-.47.82-.82.15-.36.14-.76-.03-1.11-.27-.56-.91-.84-1.58-.69l-.3-1.16c1.17-.26 2.3.23 2.78 1.21.31.62.33 1.32.26 2.29z"/></svg>
+            <span>Prime</span>
+          </button>
+          <!-- Spotify -->
+          <button class="btn-app spotify" id="app-spotify" data-app="spotify">
+            <svg viewBox="0 0 24 24"><path fill="#1ED760" d="M12 2C6.477 2 2 6.477 2 12c0 5.524 4.477 10 10 10 5.524 0 10-4.476 10-10 0-5.523-4.476-10-10-10zm4.586 14.424a.623.623 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.625.625 0 0 1-.28-1.22c3.805-.87 7.076-.496 9.715 1.12.312.19.41.6.207.857zm1.225-2.723a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.781.781 0 0 1-.453-1.495c3.633-1.103 8.147-.568 11.233 1.332a.781.781 0 0 1 .257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71a.937.937 0 0 1-.55-1.792c3.527-1.07 9.408-.865 13.125 1.341a.936.936 0 1 1-.956 1.606z"/></svg>
+            <span>Spotify</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Extra Tools Row (Number Pad, Search/Keyboard, Sound toggle) -->
+      <section class="extra-tools-bar">
+        <button class="btn-remote btn-tool" id="btn-open-numpad">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4v2h2V7H6zm4 0v2h2V7h-2zm4 0v2h2V7h-2zm-8 4v2h2v-2H6zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2zm-8 4v2h2v-2H6zm4 0v2h2v-2h-2zm4 0v2h2v-2h-2z"/></svg>
+          <span>123 Pad</span>
+        </button>
+
+        <button class="btn-remote btn-tool" id="btn-open-keyboard">
+          <svg style="width:16px;height:16px;" viewBox="0 0 24 24"><path fill="currentColor" d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+          <span>Text Input</span>
+        </button>
+
+        <button class="btn-remote btn-tool" id="btn-toggle-haptics" title="Toggle Haptics / Audio Feedback">
+          <span id="haptic-status-text">Sound: On</span>
+        </button>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Device Manager & Discovery Modal -->
+  <div class="modal-overlay" id="modal-device">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Samsung Smart TV</h2>
+        <button class="modal-close-btn" id="close-device-modal">&times;</button>
+      </div>
+
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.4">
+        Discovered devices on your local Wi-Fi. Tap your TV to connect:
+      </div>
+
+      <div id="device-list-container" style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <button class="btn-scan-again" id="btn-scan-network">
+        <svg id="scan-spinner" style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        <span id="scan-btn-label">Scan Network for TVs</span>
+      </button>
+
+      <div style="margin-top:6px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
+        <span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:6px;">Manual IP Connect:</span>
+        <div class="text-input-form">
+          <input type="text" class="text-input-field" id="input-manual-ip" placeholder="192.168.0.xxx">
+          <button class="btn-send-text" id="btn-manual-connect">Set IP</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Number Pad Modal -->
+  <div class="modal-overlay" id="modal-numpad">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Number Keypad</h2>
+        <button class="modal-close-btn" id="close-numpad-modal">&times;</button>
+      </div>
+      <div class="numpad-grid">
+        <button class="btn-remote btn-numpad" data-key="KEY_1">1</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_2">2</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_3">3</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_4">4</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_5">5</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_6">6</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_7">7</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_8">8</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_9">9</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_PRECH" style="font-size:13px">PRE-CH</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_0">0</button>
+        <button class="btn-remote btn-numpad" data-key="KEY_ENTER" style="font-size:13px;color:var(--accent-cyan)">ENTER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Input / Keyboard Modal -->
+  <div class="modal-overlay" id="modal-keyboard">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Send Text to TV</h2>
+        <button class="modal-close-btn" id="close-keyboard-modal">&times;</button>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted)">Type text to send to active TV search or text input box:</p>
+      <form class="text-input-form" id="form-send-text">
+        <input type="text" class="text-input-field" id="input-tv-text" placeholder="Search query or title..." autocomplete="off">
+        <button type="submit" class="btn-send-text">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification -->
+  <div class="toast-notice" id="toast-notice"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

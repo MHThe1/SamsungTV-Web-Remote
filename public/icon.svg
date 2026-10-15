@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#162035"/>
+      <stop offset="100%" stop-color="#0a0f1d"/>
+    </linearGradient>
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#3a7bd5"/>
+    </linearGradient>
+  </defs>
+  <!-- Remote silhouette -->
+  <rect x="120" y="32" width="272" height="448" rx="64" fill="url(#bg)" stroke="rgba(255,255,255,0.12)" stroke-width="6"/>
+  <!-- Status LED -->
+  <circle cx="256" cy="74" r="8" fill="#00e676"/>
+  <!-- Power button -->
+  <circle cx="330" cy="120" r="22" fill="#2a1520" stroke="#ff3366" stroke-width="3"/>
+  <path d="M330 110v10M324 114a9 9 0 1 0 12 0" fill="none" stroke="#ff3366" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- D-Pad outer ring -->
+  <circle cx="256" cy="240" r="74" fill="#1b253b" stroke="rgba(255,255,255,0.08)" stroke-width="4"/>
+  <!-- D-Pad center OK -->
+  <circle cx="256" cy="240" r="32" fill="url(#cyanGlow)"/>
+  <text x="256" y="246" font-family="Arial, sans-serif" font-weight="bold" font-size="16" fill="#050b14" text-anchor="middle">OK</text>
+  <!-- Directional indicators -->
+  <path d="M256 180l-8 10h16zM256 300l-8-10h16zM196 240l10-8v16zM316 240l-10-8v16z" fill="#94a3b8"/>
+  <!-- Rocker pills -->
+  <rect x="160" y="340" width="48" height="96" rx="24" fill="#182236" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+  <text x="184" y="372" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#f1f5f9" text-anchor="middle">+</text>
+  <text x="184" y="420" font-family="Arial, sans-serif" font-weight="bold" font-size="20" fill="#f1f5f9" text-anchor="middle">−</text>
+  <rect x="304" y="340" width="48" height="96" rx="24" fill="#182236" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+  <path d="M328 362l-6 8h12zM328 416l-6-8h12z" fill="#f1f5f9"/>
+</svg>
