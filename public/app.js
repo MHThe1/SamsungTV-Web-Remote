@@ -77,15 +77,71 @@
     } catch (_) {}
   }
 
-  function triggerHaptic(ms = 14) {
-    if (navigator.vibrate) {
-      try { navigator.vibrate(ms); } catch (_) {}
+  function triggerHaptic(style = 'default') {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        if (style === 'heavy') {
+          // Strong double buzz for power button and wake
+          navigator.vibrate([45, 30, 45]);
+        } else if (style === 'sharp') {
+          // Crisp sharp click for D-pad, arrows, rockers
+          navigator.vibrate(30);
+        } else if (style === 'double') {
+          // Double tap for app launcher and mode toggle
+          navigator.vibrate([25, 20, 25]);
+        } else if (style === 'light') {
+          navigator.vibrate(20);
+        } else {
+          // Standard tactile pulse (noticeable across all phones)
+          navigator.vibrate(35);
+        }
+      } catch (_) {}
     }
   }
 
-  function feedback(freq = 600) {
+  function createRipple(element, clientX, clientY) {
+    try {
+      const rect = element.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'click-ripple';
+
+      const x = (typeof clientX === 'number' && clientX > 0) ? (clientX - rect.left) : (rect.width / 2);
+      const y = (typeof clientY === 'number' && clientY > 0) ? (clientY - rect.top) : (rect.height / 2);
+
+      ripple.style.left = `${x}px`;
+      ripple.style.top = `${y}px`;
+
+      const size = Math.max(rect.width, rect.height) * 1.8;
+      ripple.style.width = `${size}px`;
+      ripple.style.height = `${size}px`;
+
+      element.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 420);
+    } catch (_) {}
+  }
+
+  function addTactileEffects(btn, hapticStyle = 'default', soundFreq = 600) {
+    if (!btn) return;
+
+    btn.addEventListener('pointerdown', (e) => {
+      btn.classList.add('is-pressed');
+      triggerHaptic(hapticStyle);
+      playClickSound(soundFreq);
+      createRipple(btn, e.clientX, e.clientY);
+    });
+
+    const removePressed = () => {
+      btn.classList.remove('is-pressed');
+    };
+
+    btn.addEventListener('pointerup', removePressed);
+    btn.addEventListener('pointercancel', removePressed);
+    btn.addEventListener('pointerleave', removePressed);
+  }
+
+  function feedback(freq = 600, hapticStyle = 'default') {
     playClickSound(freq);
-    triggerHaptic(14);
+    triggerHaptic(hapticStyle);
   }
 
   // --- Toast Notification ---
@@ -141,8 +197,6 @@
 
   // Send remote key
   function sendKey(keyName) {
-    feedback(keyName === 'KEY_ENTER' ? 750 : 550);
-
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: 'send_key', key: keyName }));
     } else {
@@ -159,13 +213,12 @@
 
   // Toggle or Wake TV
   function handlePower() {
-    feedback(350);
     showToast('Powering TV...');
     fetch('/api/power', { method: 'POST' })
       .then(r => r.json())
       .then(res => {
         if (res.action === 'wake_and_power') {
-          showToast('Sent Wake-on-LAN & Power Signal');
+          showToast('Sent Wake-on-LAN and Power Signal');
         } else {
           showToast('Power command sent');
         }
@@ -175,7 +228,6 @@
 
   // Launch App
   function launchApp(appName) {
-    feedback(800);
     showToast(`Launching ${appName}...`);
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ action: 'launch_app', app: appName }));
@@ -192,7 +244,7 @@
   function updateUI(state) {
     tvState = state;
 
-    // Title & Subtitle
+    // Title and Subtitle
     deviceTitle.textContent = state.name || 'Samsung Smart TV';
 
     statusDot.className = 'status-dot';
@@ -228,26 +280,47 @@
     }
   }
 
-  // --- Attach Button Listeners ---
+  // --- Attach Button Listeners & Tactile Effects ---
   function initButtons() {
-    // Buttons with data-key
+    // Buttons with data-key (D-Pad, volume, numbers, actions)
     document.querySelectorAll('[data-key]').forEach(btn => {
       const key = btn.dataset.key;
+      let hapticStyle = 'default';
+      let freq = 550;
+
+      if (key === 'KEY_ENTER') {
+        hapticStyle = 'default';
+        freq = 750;
+      } else if (key.startsWith('KEY_UP') || key.startsWith('KEY_DOWN') || key.startsWith('KEY_LEFT') || key.startsWith('KEY_RIGHT')) {
+        hapticStyle = 'sharp';
+        freq = 620;
+      } else if (key.includes('VOL') || key.includes('CH')) {
+        hapticStyle = 'sharp';
+        freq = 640;
+      } else if (key === 'KEY_MUTE') {
+        hapticStyle = 'double';
+        freq = 480;
+      }
+
+      addTactileEffects(btn, hapticStyle, freq);
+
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         sendKey(key);
       });
     });
 
-    // Power Button
+    // Power Button (distinct heavy haptic feedback)
+    addTactileEffects(btnPower, 'heavy', 340);
     btnPower.addEventListener('click', (e) => {
       e.preventDefault();
       handlePower();
     });
 
-    // App Launchers
+    // App Launchers (double vibration pulse)
     document.querySelectorAll('[data-app]').forEach(btn => {
       const app = btn.dataset.app;
+      addTactileEffects(btn, 'double', 800);
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         launchApp(app);
@@ -255,21 +328,30 @@
     });
 
     // Navigation View Toggle (D-Pad vs Touchpad)
+    addTactileEffects(toggleDpad, 'light', 500);
     toggleDpad.addEventListener('click', () => {
-      feedback(500);
       toggleDpad.classList.add('active');
       toggleTouchpad.classList.remove('active');
       dpadWrapper.style.display = 'flex';
       touchpadSurface.classList.remove('active');
     });
 
+    addTactileEffects(toggleTouchpad, 'light', 500);
     toggleTouchpad.addEventListener('click', () => {
-      feedback(500);
       toggleTouchpad.classList.add('active');
       toggleDpad.classList.remove('active');
       dpadWrapper.style.display = 'none';
       touchpadSurface.classList.add('active');
     });
+
+    // Tool buttons (Numpad, Text, Haptics toggle)
+    const btnOpenNumpad = document.getElementById('btn-open-numpad');
+    const btnOpenKeyboard = document.getElementById('btn-open-keyboard');
+    const btnDeviceModal = document.getElementById('btn-device-modal');
+
+    addTactileEffects(btnOpenNumpad, 'light', 520);
+    addTactileEffects(btnOpenKeyboard, 'light', 520);
+    addTactileEffects(btnDeviceModal, 'light', 480);
 
     // Touchpad Gesture Tracking
     initTouchpad();
@@ -278,12 +360,12 @@
     const btnToggleHaptics = document.getElementById('btn-toggle-haptics');
     const hapticStatusText = document.getElementById('haptic-status-text');
     hapticStatusText.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+    addTactileEffects(btnToggleHaptics, 'double', 700);
 
     btnToggleHaptics.addEventListener('click', () => {
       soundEnabled = !soundEnabled;
       localStorage.setItem('tv_remote_sound', soundEnabled ? 'true' : 'false');
       hapticStatusText.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
-      if (soundEnabled) feedback(700);
       showToast(soundEnabled ? 'Audio feedback enabled' : 'Audio feedback muted');
     });
 
@@ -321,20 +403,30 @@
 
       if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && dt < 300) {
         // Tap -> Enter
+        triggerHaptic('default');
+        playClickSound(750);
         sendKey('KEY_ENTER');
         return;
       }
 
       if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > threshold) {
+          triggerHaptic('sharp');
+          playClickSound(620);
           sendKey('KEY_RIGHT');
         } else if (dx < -threshold) {
+          triggerHaptic('sharp');
+          playClickSound(620);
           sendKey('KEY_LEFT');
         }
       } else {
         if (dy > threshold) {
+          triggerHaptic('sharp');
+          playClickSound(620);
           sendKey('KEY_DOWN');
         } else if (dy < -threshold) {
+          triggerHaptic('sharp');
+          playClickSound(620);
           sendKey('KEY_UP');
         }
       }
@@ -343,29 +435,40 @@
 
   // --- Modals Setup ---
   function setupModals() {
+    const closeDeviceBtn = document.getElementById('close-device-modal');
+    const closeNumpadBtn = document.getElementById('close-numpad-modal');
+    const closeKeyboardBtn = document.getElementById('close-keyboard-modal');
+    const btnManualConnect = document.getElementById('btn-manual-connect');
+
+    addTactileEffects(closeDeviceBtn, 'light', 450);
+    addTactileEffects(closeNumpadBtn, 'light', 450);
+    addTactileEffects(closeKeyboardBtn, 'light', 450);
+    addTactileEffects(btnScanNetwork, 'default', 600);
+    addTactileEffects(btnManualConnect, 'default', 650);
+
     // Open Device Modal
     document.getElementById('btn-device-modal').addEventListener('click', () => {
       openModal(modalDevice);
       populateDeviceList();
     });
-    document.getElementById('close-device-modal').addEventListener('click', () => closeModal(modalDevice));
+    closeDeviceBtn.addEventListener('click', () => closeModal(modalDevice));
 
     // Open Numpad Modal
     document.getElementById('btn-open-numpad').addEventListener('click', () => openModal(modalNumpad));
-    document.getElementById('close-numpad-modal').addEventListener('click', () => closeModal(modalNumpad));
+    closeNumpadBtn.addEventListener('click', () => closeModal(modalNumpad));
 
     // Open Keyboard Modal
     document.getElementById('btn-open-keyboard').addEventListener('click', () => {
       openModal(modalKeyboard);
       setTimeout(() => document.getElementById('input-tv-text').focus(), 150);
     });
-    document.getElementById('close-keyboard-modal').addEventListener('click', () => closeModal(modalKeyboard));
+    closeKeyboardBtn.addEventListener('click', () => closeModal(modalKeyboard));
 
     // Scan Network button
     btnScanNetwork.addEventListener('click', runDiscovery);
 
     // Manual IP connect
-    document.getElementById('btn-manual-connect').addEventListener('click', () => {
+    btnManualConnect.addEventListener('click', () => {
       const ip = inputManualIp.value.trim();
       if (!ip) return;
       selectTV(ip, 'Samsung TV');

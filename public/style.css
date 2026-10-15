@@ -173,8 +173,11 @@ body {
   border: none;
   background: linear-gradient(180deg, var(--remote-surface) 0%, #131928 100%);
   color: var(--text-main);
-  box-shadow: var(--btn-shadow-top), var(--btn-shadow-bottom);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 5px 12px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   font-family: 'Inter', sans-serif;
   font-size: 13px;
@@ -183,16 +186,23 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease, color 0.15s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   position: relative;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .btn-remote:active,
-.btn-remote.pressed {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: var(--btn-active-shadow);
-  border-color: rgba(0, 210, 255, 0.4);
+.btn-remote.is-pressed {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 
+    inset 0 4px 10px rgba(0, 0, 0, 0.8),
+    inset 0 0 6px rgba(0, 0, 0, 0.6),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  border-color: rgba(0, 210, 255, 0.5);
+  color: var(--accent-cyan);
+  transition-duration: 0.04s;
 }
 
 .btn-icon-only {
@@ -205,6 +215,12 @@ body {
   width: 20px;
   height: 20px;
   fill: currentColor;
+  transition: transform 0.15s ease;
+}
+
+.btn-remote:active svg,
+.btn-remote.is-pressed svg {
+  transform: scale(0.92);
 }
 
 /* Power Button */
@@ -212,19 +228,45 @@ body {
   background: linear-gradient(180deg, #2a1520 0%, #1a0d14 100%);
   color: var(--accent-power);
   border-color: rgba(255, 51, 102, 0.25);
-  box-shadow: 0 4px 14px rgba(255, 51, 102, 0.2);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 5px 14px rgba(255, 51, 102, 0.25);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, background 0.15s ease;
 }
 
-.btn-power:active {
+.btn-power:active,
+.btn-power.is-pressed {
+  transform: translateY(3px) scale(0.92);
   background: #ff3366;
   color: #fff;
-  box-shadow: 0 0 20px var(--accent-power-glow);
+  box-shadow: 
+    inset 0 4px 10px rgba(0, 0, 0, 0.7),
+    0 0 24px var(--accent-power-glow);
+  transition-duration: 0.04s;
 }
 
 .btn-power.is-active {
   color: var(--accent-green);
   border-color: rgba(0, 230, 118, 0.3);
-  box-shadow: 0 0 12px var(--accent-green-glow);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.15),
+    0 0 14px var(--accent-green-glow);
+}
+
+/* Dynamic Click Ripple */
+.click-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 210, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 40%, transparent 70%);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: ripple-pop 0.38s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+  z-index: 10;
+}
+
+@keyframes ripple-pop {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
 }
 
 /* Status Banner / Pairing Prompt */
@@ -349,20 +391,17 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: all 0.1s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.1s ease;
   z-index: 2;
+  perspective: 400px;
+  user-select: none;
 }
 
 .dpad-btn svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   fill: currentColor;
-  transition: transform 0.1s ease, fill 0.15s ease;
-}
-
-.dpad-btn:active,
-.dpad-btn.pressed {
-  color: var(--accent-cyan);
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease;
 }
 
 .dpad-up {
@@ -371,7 +410,16 @@ body {
   right: 0;
   height: 60px;
 }
-.dpad-up:active svg { transform: translateY(-3px); }
+.dpad-up:active,
+.dpad-up.is-pressed {
+  transform: perspective(300px) rotateX(16deg) translateY(-3px) scale(0.96);
+  color: var(--accent-cyan);
+}
+.dpad-up:active svg,
+.dpad-up.is-pressed svg {
+  transform: translateY(-4px) scale(1.15);
+  filter: drop-shadow(0 0 8px var(--accent-cyan));
+}
 
 .dpad-down {
   bottom: 6px;
@@ -379,7 +427,16 @@ body {
   right: 0;
   height: 60px;
 }
-.dpad-down:active svg { transform: translateY(3px); }
+.dpad-down:active,
+.dpad-down.is-pressed {
+  transform: perspective(300px) rotateX(-16deg) translateY(3px) scale(0.96);
+  color: var(--accent-cyan);
+}
+.dpad-down:active svg,
+.dpad-down.is-pressed svg {
+  transform: translateY(4px) scale(1.15);
+  filter: drop-shadow(0 0 8px var(--accent-cyan));
+}
 
 .dpad-left {
   top: 0;
@@ -387,7 +444,16 @@ body {
   left: 6px;
   width: 60px;
 }
-.dpad-left:active svg { transform: translateX(-3px); }
+.dpad-left:active,
+.dpad-left.is-pressed {
+  transform: perspective(300px) rotateY(-16deg) translateX(-3px) scale(0.96);
+  color: var(--accent-cyan);
+}
+.dpad-left:active svg,
+.dpad-left.is-pressed svg {
+  transform: translateX(-4px) scale(1.15);
+  filter: drop-shadow(0 0 8px var(--accent-cyan));
+}
 
 .dpad-right {
   top: 0;
@@ -395,7 +461,16 @@ body {
   right: 6px;
   width: 60px;
 }
-.dpad-right:active svg { transform: translateX(3px); }
+.dpad-right:active,
+.dpad-right.is-pressed {
+  transform: perspective(300px) rotateY(16deg) translateX(3px) scale(0.96);
+  color: var(--accent-cyan);
+}
+.dpad-right:active svg,
+.dpad-right.is-pressed svg {
+  transform: translateX(4px) scale(1.15);
+  filter: drop-shadow(0 0 8px var(--accent-cyan));
+}
 
 /* Center OK Button */
 .dpad-center {
@@ -418,15 +493,18 @@ body {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .dpad-center:active,
-.dpad-center.pressed {
-  transform: scale(0.92);
-  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+.dpad-center.is-pressed {
+  transform: scale(0.88);
+  box-shadow: 
+    inset 0 4px 10px rgba(0, 0, 0, 0.9),
+    0 0 20px var(--accent-glow);
   color: var(--accent-cyan);
-  border-color: rgba(0, 210, 255, 0.4);
+  border-color: rgba(0, 210, 255, 0.6);
+  transition-duration: 0.04s;
 }
 
 /* Touchpad Alternative View */
@@ -533,14 +611,34 @@ body {
   font-weight: 700;
   cursor: pointer;
   border-radius: 28px;
-  transition: all 0.08s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.1s ease, color 0.1s ease, box-shadow 0.15s ease;
+  perspective: 300px;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  overflow: hidden;
 }
 
-.rocker-btn:active,
-.rocker-btn.pressed {
-  background: rgba(255, 255, 255, 0.07);
+#btn-vol-up:active,
+#btn-vol-up.is-pressed,
+#btn-ch-up:active,
+#btn-ch-up.is-pressed {
+  background: rgba(0, 210, 255, 0.18);
   color: var(--accent-cyan);
-  transform: scale(0.94);
+  transform: perspective(300px) rotateX(18deg) translateY(-4px) scale(0.95);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+  transition-duration: 0.04s;
+}
+
+#btn-vol-down:active,
+#btn-vol-down.is-pressed,
+#btn-ch-down:active,
+#btn-ch-down.is-pressed {
+  background: rgba(0, 210, 255, 0.18);
+  color: var(--accent-cyan);
+  transform: perspective(300px) rotateX(-18deg) translateY(4px) scale(0.95);
+  box-shadow: inset 0 -3px 8px rgba(0, 0, 0, 0.7);
+  transition-duration: 0.04s;
 }
 
 .rocker-label {
@@ -635,11 +733,19 @@ body {
   gap: 6px;
   color: var(--text-main);
   cursor: pointer;
-  transition: transform 0.1s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.btn-app:active {
-  transform: scale(0.92);
+.btn-app:active,
+.btn-app.is-pressed {
+  transform: translateY(2px) scale(0.90);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7);
+  transition-duration: 0.04s;
 }
 
 .btn-app svg,
